@@ -9,4 +9,4 @@ A demo will be available on http://www.portostar.com/chrome_screen_and_audio_mp3
 
 Current bug: 
 	- Playing and uploading does not work properly right now, but at least recording works - under construction.
-	- media.getUserMedia is deprecated. This application really is only usable for a certain amount of time, until a new WebRTC demo with simulteneous audio and screen recording support comes out.
+	- media.getUserMedia is deprecated. This application really is only usable for a certain amount of time, until a new WebRTC demo with audio support when screen recording comes out.
