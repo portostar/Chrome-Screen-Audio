@@ -16,10 +16,9 @@
     <link rel="author" type="text/html" href="https://plus.google.com/+MuazKhan">
     <meta name="author" content="Muaz Khan">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <script src="js/jquery-1.11.0.min.js"></script>
-  <script src="recordmp3.js"></script>
+    <script src="js/jquery-1.11.0.min.js"></script>
+    <script src="recordmp3.js"></script>
     <link rel="stylesheet" href="https://cdn.webrtc-experiment.com/style.css">
-
     <style>
     audio {
         vertical-align: bottom;
@@ -93,6 +92,8 @@
     log.innerHTML += "\n" + e + " " + (data || '');
   }
 
+  var uploadedVideo = false;
+  var uploadedAudio = false;
   var audio_context;
   var recorder;
 
@@ -391,14 +392,20 @@
 							__log('Stopping recording and uploading it.');
 							stopRecording(); // RecorderJS
 							// disabled because we want to upload it first to play it with audio thereafter
-                            //recordingPlayer.play();
+                            // recordingPlayer.play();
 							// After uploading the mp3, upload the video as well
 						    __log('Uploading video.');
 							 
 							if(!button.recordRTC) return alert('No recording found.');
 							uploadToServer(button.recordRTC, function(progress, fileURL) {
 								if(progress === 'ended') {									
-									window.open("play.php?id="+globalFilename);
+									// only when uploadedAudio = true it's time for a redirection
+										if (uploadedAudio)
+										{
+											window.location.href=("play.php?id="+globalFilename);
+										} else {
+											uploadedVideo=true;
+										}
 									return;
 								}
 								__log(progress);

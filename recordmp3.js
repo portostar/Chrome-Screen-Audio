@@ -181,7 +181,7 @@
 		var reader = new FileReader();
 		reader.onload = function(event){
 			var fd = new FormData();
-			var mp3Name = encodeURIComponent('audio_recording_' + globalFilename+ '.mp3');
+			var mp3Name = encodeURIComponent(globalFilename);
 			console.log("mp3name = " + mp3Name);
 			fd.append('fname', mp3Name);
 			fd.append('data', event.target.result);
@@ -194,6 +194,12 @@
 			}).done(function(data) {
 				//console.log(data);
 				log.innerHTML += "\n" + data;
+				if (uploadedVideo)
+				{
+					window.location.href=("play.php?id="+globalFilename);
+				} else {
+					uploadedAudio=true;
+				}
 			});
 		};
 		reader.readAsDataURL(mp3Data);
