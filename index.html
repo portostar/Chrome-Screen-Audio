@@ -16,7 +16,6 @@
     <link rel="author" type="text/html" href="https://plus.google.com/+MuazKhan">
     <meta name="author" content="Muaz Khan">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <script src="js/jquery-1.11.0.min.js"></script>
 	<script>
 	var serverURL = "http://localhost:8000";
 	var uploadedAudio = false;
@@ -24,7 +23,6 @@
 	</script>
     
 
-<script src="js/test.js"></script>
     <link rel="stylesheet" href="https://cdn.webrtc-experiment.com/style.css">
     <style>
     audio {
@@ -205,7 +203,7 @@ function xhr(url, data, callback) {
         audioPreview.src = window.URL.createObjectURL(stream);
         audioPreview.play();
 
-        recordAudio = RecordRTC(stream, {
+        recordAudio = new RecordRTC(stream, {
             bufferSize: 16384
         });
 
@@ -218,15 +216,19 @@ function xhr(url, data, callback) {
   function stopRecording() {
 	startRecordingButton.disabled = false;
     stopRecordingButton.disabled = true;
-
-    fileName = Math.round(Math.random() * 99999999) + 99999999;
+	
+	if (globalFilename==0)
+	{	
+	globalFilename = Math.floor(Math.random()*99999999);
+	}
+    
 
     recordAudio.stopRecording();
 
     recordAudio.getDataURL(function (audioDataURL) {
         var files = {
             audio: {
-                name: fileName + '.wav',
+                name: globalFilename + '.wav',
                 type: 'audio/wav',
                 contents: audioDataURL
             }
@@ -239,6 +241,13 @@ function xhr(url, data, callback) {
             /*var href = location.href.substr(0, location.href.lastIndexOf('/') + 1);
             audioPreview.src =  'uploads/' + fileName;
             audioPreview.play();*/
+			
+			if (uploadedAudio==true)
+			{
+				window.location.href=("play.php?id="+globalFilename);
+			} else {
+				uploadedVideo=true;
+			}
 
         });
     });
@@ -270,13 +279,15 @@ function xhr(url, data, callback) {
         </script>
         
         <script>
+			var button;
             var recordingDIV = document.querySelector('.recordrtc');
             var recordingMedia = recordingDIV.querySelector('.recording-media');
             var recordingPlayer = recordingDIV.querySelector('video');
             var mediaContainerFormat = recordingDIV.querySelector('.media-container-format');
             
             recordingDIV.querySelector('button').onclick = function() {
-                var button = this;
+				
+                button = this;
                 
                 if(button.innerHTML === 'Stop Recording') {
                     button.disabled = true;
@@ -367,7 +378,7 @@ function xhr(url, data, callback) {
                     
                     button.mediaCapturedCallback = function() {
 						startRecording();
-                        button.recordRTC = RecordRTC(button.stream, {
+                        button.recordRTC = new RecordRTC(button.stream, {
                             type: mediaContainerFormat.value === 'Gif' ? 'gif' : 'video',
                             disableLogs: params.disableLogs || false,
                             canvas: {
@@ -395,7 +406,7 @@ function xhr(url, data, callback) {
 							// globalFilename will be used to identify the object. No duplicate check.
 							globalFilename = Math.floor(Math.random()*99999999);
 							__log('Stopping recording and uploading it.');
-							stopRecording(); // RecorderJS
+							stopRecording(); // Stopping the audio recording
 							// disabled because we want to upload it first to play it with audio thereafter
                             // recordingPlayer.play();
 							// After uploading the mp3, upload the video as well
@@ -403,7 +414,8 @@ function xhr(url, data, callback) {
 							 
 							if(!button.recordRTC) return alert('No recording found.');
 							uploadToServer(button.recordRTC, function(progress, fileURL) {
-								if(progress === 'ended') {									
+								if(progress === 'ended') {	
+									
 									// only when uploadedAudio = true it's time for a redirection
 										if (uploadedAudio)
 										{
@@ -486,8 +498,9 @@ function xhr(url, data, callback) {
             }
 
             function uploadToServer(recordRTC, callback) {
-                var blob = recordRTC instanceof Blob ? recordRTC : recordRTC.blob;
+                var blob = button.recordRTC instanceof Blob ? button.recordRTC : button.recordRTC.getBlob();
                 var fileType = blob.type.split('/')[0] || 'audio';				
+
 				if (globalFilename==0)
 				{
                 globalFilename = Math.floor(Math.random()*99999999);
@@ -495,10 +508,10 @@ function xhr(url, data, callback) {
 
                 // create FormData
                 var formData = new FormData();
-                formData.append(fileType + '-filename', globalFilename+".webm");
+                formData.append(fileType+'-filename', globalFilename+".webm");
                 formData.append(fileType + '-blob', blob);
 
-                callback('Uploading ' + fileType + ' recording to server.');
+                callback('Uploading webm recording to server.');
 
                 makeXMLHttpRequest('save_video.php', formData, function(progress) {
                     if (progress !== 'upload-ended') {
