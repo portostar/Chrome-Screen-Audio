@@ -17,7 +17,14 @@
     <meta name="author" content="Muaz Khan">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <script src="js/jquery-1.11.0.min.js"></script>
-    <script src="recordmp3.js"></script>
+	<script>
+	var serverURL = "http://localhost:8000";
+	var uploadedAudio = false;
+	var uploadedVideo = false;
+	</script>
+    
+
+<script src="js/test.js"></script>
     <link rel="stylesheet" href="https://cdn.webrtc-experiment.com/style.css">
     <style>
     audio {
@@ -79,82 +86,13 @@
         }
     </style>
     
-    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+    <script src="js/RecordRTC.js"></script>
     <script src="https://cdn.webrtc-experiment.com/gif-recorder.js"></script>
     <script src="https://cdn.webrtc-experiment.com/getScreenId.js"></script>
 
     <!-- for Edige/FF/Chrome/Opera/etc. getUserMedia support -->
     <script src="https://cdn.rawgit.com/webrtc/adapter/master/adapter.js"></script>
-	<script>
-	// RECORDER
-
-	 function __log(e, data) {
-    log.innerHTML += "\n" + e + " " + (data || '');
-  }
-
-  var uploadedVideo = false;
-  var uploadedAudio = false;
-  var audio_context;
-  var recorder;
-
-  function startUserMedia(stream) {
-    var input = audio_context.createMediaStreamSource(stream);
-    __log('Media stream created.' );
-	__log("input sample rate " +input.context.sampleRate);
-
-    // Feedback!
-    //input.connect(audio_context.destination);
-    __log('Input connected to audio context destination.');
-
-    recorder = new Recorder(input, {
-                  numChannels: 1,
-				  callback : function() {
-					  alert("FINSIHED");
-					  recordingPlayer.play();
-				  }
-                });
-    __log('Recorder initialised.');
-  }
-
-  function startRecording() {
-	var button = document.getElementById('start');
-    recorder && recorder.record();
-    button.disabled = true;
-    button.nextElementSibling.disabled = false;
-    __log('Recording...');
-  }
-
-  function stopRecording(button) {
-	var button = document.getElementById('stop');
-    recorder && recorder.stop();
-    button.disabled = true;
-    button.previousElementSibling.disabled = false;
-    __log('Stopped recording.');
-
-    // create WAV download link using audio data blob
-    createDownloadLink();
-
-    recorder.clear();
-  }
-
-  function createDownloadLink() {
-    recorder && recorder.exportWAV(function(blob) {
-      /*var url = URL.createObjectURL(blob);
-      var li = document.createElement('li');
-      var au = document.createElement('audio');
-      var hf = document.createElement('a');
-
-      au.controls = true;
-      au.src = url;
-      hf.href = url;
-      hf.download = new Date().toISOString() + '.wav';
-      hf.innerHTML = hf.download;
-      li.appendChild(au);
-      li.appendChild(hf);
-      recordingslist.appendChild(li);*/
-    });
-  }
-</script>
+	
 </head>
 
 <body>
@@ -176,8 +114,6 @@
         </header>
 
         <div class="github-stargazers"></div>
-
-    
 
 
         
@@ -209,41 +145,110 @@
 
             <video controls muted></video>
         </section>
-        		 <button id="start" onclick="startRecording();">record audio</button>
-  <button id="stop" onclick="stopRecording();" disabled>stop audio</button>
 
   <h2>Recordings</h2>
   <ul id="recordingslist"></ul>
 
+			<p>
+				<audio id="audio-preview" controls style="border: 1px solid rgb(15, 158, 238); width: 94%;height: 11em;"></audio> 
+			</p><hr />
+<div>
+				<button id="start-recording">Start Recording</button>
+				<button id="stop-recording" disabled="">Stop Recording</button>
+			</div>
+			
   <h2>Log</h2>
   <pre id="log"></pre>
+
+  <script>
+	// AUDIO RECORDING START
+		var startRecordingButton = document.getElementById('start-recording');
+		var stopRecordingButton = document.getElementById('stop-recording');
+		var audioPreview = document.getElementById('audio-preview');
+		
+
+var recordAudio;
+startRecordingButton.onclick = function () {
+	startRecording();
+};
+
+var fileName;
+stopRecordingButton.onclick = function () {
+    stopRecording();
+};
+
+function xhr(url, data, callback) {
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function () {
+        if (request.readyState == 4 && request.status == 200) {
+            callback(request.responseText);
+        }
+    };
+    request.open('POST', url);
+    request.send(data);
+}
+
+
+	 function __log(e, data) {
+    log.innerHTML += "\n" + e + " " + (data || '');
+  }
+
+  var audio_context;
+  var recorder;
+
+
+  function startRecording() {
+		    startRecordingButton.disabled = true;
+    navigator.getUserMedia({
+        audio: true
+    }, function (stream) {
+        audioPreview.src = window.URL.createObjectURL(stream);
+        audioPreview.play();
+
+        recordAudio = RecordRTC(stream, {
+            bufferSize: 16384
+        });
+
+        recordAudio.startRecording();
+
+        stopRecordingButton.disabled = false;
+    }, function() { });
+  }
+
+  function stopRecording() {
+	startRecordingButton.disabled = false;
+    stopRecordingButton.disabled = true;
+
+    fileName = Math.round(Math.random() * 99999999) + 99999999;
+
+    recordAudio.stopRecording();
+
+    recordAudio.getDataURL(function (audioDataURL) {
+        var files = {
+            audio: {
+                name: fileName + '.wav',
+                type: 'audio/wav',
+                contents: audioDataURL
+            }
+        };
+
+        audioPreview.src = '';
+        audioPreview.poster = '/ajax-loader.gif';
+
+        xhr(serverURL+'/upload', JSON.stringify(files), function (fileName) {
+            /*var href = location.href.substr(0, location.href.lastIndexOf('/') + 1);
+            audioPreview.src =  'uploads/' + fileName;
+            audioPreview.play();*/
+
+        });
+    });
+  }
+// AUDIO RECORDING END
+</script>
 
         <script>
 		var globalFilename = 0; // Will be set before uploading
             (function() {
-			// RECORDER
-			
-				    try {
-      // webkit shim
-      window.AudioContext = window.AudioContext || window.webkitAudioContext;
-      navigator.getUserMedia = ( navigator.getUserMedia ||
-                       navigator.webkitGetUserMedia ||
-                       navigator.mozGetUserMedia ||
-                       navigator.msGetUserMedia);
-      window.URL = window.URL || window.webkitURL;
-
-      audio_context = new AudioContext;
-      __log('Audio context set up.');
-      __log('navigator.getUserMedia ' + (navigator.getUserMedia ? 'available.' : 'not present!'));
-    } catch (e) {
-      alert('No web audio support in this browser!');
-    }
-
-    navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
-      __log('No live audio input: ' + e);
-    });
-
-	// OTHER
                 var params = {},
                     r = /([^&=]+)=?([^&]*)/g;
 
@@ -366,8 +371,8 @@
                             type: mediaContainerFormat.value === 'Gif' ? 'gif' : 'video',
                             disableLogs: params.disableLogs || false,
                             canvas: {
-                                width: screen.width,
-                                height: screen.height
+                                width: Math.floor(screen.width/2),
+                                height: Math.floor(screen.height/2)
                             }
                         });
                         
