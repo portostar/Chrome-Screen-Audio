@@ -198,7 +198,7 @@ RecordRTC.writeToDisk = function(options) {
 
 // animation-frame used in WebM recording
 requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
-cancelAnimationFrame = window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame;
+cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame;
 
 // WebAudio API representer
 AudioContext = window.AudioContext || window.mozAudioContext;
