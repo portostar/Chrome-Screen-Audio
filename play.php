@@ -29,18 +29,24 @@ if (true) {
   <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
   <script>
+  var videoElement;
+  var audioElement;
   $(function() {
 
-	  	$('video').mediaelementplayer({
-		alwaysShowControls: true,
+	  	video = $('video').mediaelementplayer({
+	 features: [],
     iPadUseNativeControls: true,
     iPhoneUseNativeControls: true,
     AndroidUseNativeControls: true,
+		 pauseOtherPlayers: false,
     plugins: ['flash', 'silverlight'],
     success: function(mediaElement, domObject) {
                 // Player is ready
                 
-				
+				videoElement = mediaElement;
+				mediaElement.addEventListener("play", function() {
+					audioElement.play();
+				});
 			
 
     },
@@ -51,17 +57,20 @@ if (true) {
 
 
 	$('audio').mediaelementplayer({
-	alwaysShowControls: true,
+	
     features: ['playpause','progress','volume'],
     audioVolume: 'horizontal',
     iPadUseNativeControls: true,
     iPhoneUseNativeControls: true,
     AndroidUseNativeControls: true,
+		pauseOtherPlayers: false,
     plugins: ['flash', 'silverlight'],
     success: function(mediaElement, domObject) {
                 // Player is ready
-           
-				
+				 audioElement = mediaElement;           
+				mediaElement.addEventListener("play", function() {
+					videoElement.play();
+				});
 		
 
     },
@@ -70,6 +79,7 @@ if (true) {
     }
 });	
   });
+
 
 </script>
 </head>
