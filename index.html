@@ -350,6 +350,9 @@ function xhr(url, data, callback) {
               
                 
                 if (true) { // (recordingMedia.value === 'record-screen') {					
+					uploadedAudio = false;
+					uploadedVideo = false;
+
                     captureScreen(commonConfig);
                     
                     button.mediaCapturedCallback = function() {
