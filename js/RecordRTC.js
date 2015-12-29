@@ -341,9 +341,9 @@ function StereoAudioRecorder(mediaStream, root) {
         view.setUint16(20, 1, true);
 
         // stereo (2 channels)
-        view.setUint16(22, 2, true);
-        view.setUint32(24, sampleRate, true);
-        view.setUint32(28, sampleRate * 4, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate *2, true);
+        view.setUint32(28, sampleRate * 2, true);
         view.setUint16(32, 4, true);
         view.setUint16(34, 16, true);
 
@@ -437,9 +437,9 @@ function StereoAudioRecorder(mediaStream, root) {
     var legalBufferValues = [256, 512, 1024, 2048, 4096, 8192, 16384];
     var bufferSize = root.bufferSize || 4096;
 
-    if (legalBufferValues.indexOf(bufferSize) == -1) {
+    /*if (legalBufferValues.indexOf(bufferSize) == -1) {
         throw 'Legal values for buffer-size are ' + JSON.stringify(legalBufferValues, null, '\t');
-    }
+    }*/
 
     // The sample rate (in sample-frames per second) at which the 
     // AudioContext handles audio. It is assumed that all AudioNodes 
@@ -461,9 +461,9 @@ function StereoAudioRecorder(mediaStream, root) {
     console.log('buffer-size', bufferSize);
 
     if (context.createJavaScriptNode) {
-        __stereoAudioRecorderJavacriptNode = context.createJavaScriptNode(bufferSize, 2, 2);
+        __stereoAudioRecorderJavacriptNode = context.createJavaScriptNode(bufferSize, 1, 1);
     } else if (context.createScriptProcessor) {
-        __stereoAudioRecorderJavacriptNode = context.createScriptProcessor(bufferSize, 2, 2);
+        __stereoAudioRecorderJavacriptNode = context.createScriptProcessor(bufferSize, 1, 1);
     } else {
         throw 'WebAudio API has no support on this browser.';
     }
@@ -472,11 +472,11 @@ function StereoAudioRecorder(mediaStream, root) {
         if (!recording) return;
 
         var left = e.inputBuffer.getChannelData(0);
-        var right = e.inputBuffer.getChannelData(1);
+       // var right = e.inputBuffer.getChannelData(1);
 
         // we clone the samples
         leftchannel.push(new Float32Array(left));
-        rightchannel.push(new Float32Array(right));
+        //rightchannel.push(new Float32Array(right));
 
         recordingLength += bufferSize;
     };
