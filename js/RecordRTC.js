@@ -342,7 +342,7 @@ function StereoAudioRecorder(mediaStream, root) {
 
         // stereo (2 channels)
         view.setUint16(22, 1, true);
-        view.setUint32(24, sampleRate *2, true);
+        view.setUint32(24, sampleRate , true);
         view.setUint32(28, sampleRate * 2, true);
         view.setUint16(32, 4, true);
         view.setUint16(34, 16, true);
@@ -368,14 +368,14 @@ function StereoAudioRecorder(mediaStream, root) {
     };
 
     function interleave(leftChannel, rightChannel) {
-        var length = leftChannel.length + rightChannel.length;
+        var length = leftChannel.length;
         var result = new Float32Array(length);
 
         var inputIndex = 0;
 
         for (var index = 0; index < length;) {
             result[index++] = leftChannel[inputIndex];
-            result[index++] = rightChannel[inputIndex];
+            //result[index++] = rightChannel[inputIndex];
             inputIndex++;
         }
         return result;
