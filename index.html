@@ -358,8 +358,8 @@ function xhr(url, data, callback) {
                             type: 'video', // mediaContainerFormat.value === 'Gif' ? 'gif' : 'video',
                             disableLogs: false,
                             canvas: {
-                                width: Math.floor(screen.width),
-                                height: Math.floor(screen.height)
+                                width: Math.floor(screen.width/2),
+                                height: Math.floor(screen.height/2)
                             }
                         });
                         
