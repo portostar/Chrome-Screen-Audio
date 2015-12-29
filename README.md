@@ -16,7 +16,7 @@ https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodm
 This is only for screen and audio recording at the same time. If you need further support, you should check out the demos on https://github.com/muaz-khan/RecordRTC. 
 Don't try to get Screen and Audio recording running by combining RecordRTC and getUserMedia() - it didn't work.
 
-If you're looking for further solutions to provide more recording options, i.e. "Video and Audio" or "Screen only without audio", you will either have to implement it yourself here, or have to make use of the other WebRTC examples.
+If you're looking for further solutions to provide more recording options, i.e. "Video and Audio" or "Screen only without audio", you will have to make use of the other WebRTC examples. This is, like said, for Screen and Audio.
 Recording audio only also is possible. This happens by calling index page of the nodeJS application "record-audio" inside the node_modules directory. When calling http://localhost:8080 directly, an audio only recorder gets shown.
 
 Contrary, for recording both screen and audio, please use index.html. 
