@@ -4,6 +4,7 @@ if (isset($_GET['id'])) $id=$_GET['id'];
 if (strlen($id)==0) die("No id given");
 
 if (true) {
+		$audio_file="http://salesdb.s3.amazonaws.com/".$id.".mp3";
 		$video_file="uploads_video/".$id.".webm";
 		/*if (!is_file($audio_file)) {
 		   die($audio_file." not found");
@@ -18,7 +19,7 @@ if (true) {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Simultaneous Audio and Video player</title>
+  <title> Audio player</title>
   <meta name="description" content="The HTML5 Herald">
   <meta name="author" content="SitePoint">
   <script src="mediaelement_player/jquery.js"></script>
@@ -28,45 +29,35 @@ if (true) {
   <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
   <script>
-  var videoElement;
   var audioElement;
   $(function() {
-
-	  	video = $('video').mediaelementplayer({
-	 features: [],
+	$('audio').mediaelementplayer({
+	
+    features: ['playpause','progress','volume'],
+    audioVolume: 'horizontal',
     iPadUseNativeControls: true,
     iPhoneUseNativeControls: true,
     AndroidUseNativeControls: true,
-		 pauseOtherPlayers: false,
+		pauseOtherPlayers: false,
     plugins: ['flash', 'silverlight'],
     success: function(mediaElement, domObject) {
                 // Player is ready
-                
-				videoElement = mediaElement;
-				mediaElement.addEventListener("play", function() {
-					audioElement.play();
-				});
-			
+				 audioElement = mediaElement;           
+		
+		
 
     },
     error: function() {
         alert('Error setting media!');
     }
-});	
-
-
-
+});
   });
-
 
 </script>
 </head>
 
 <body>
-<video id="video" width="100%" height="100%" autoplay>
-  <source src="uploads_video/<?=$id?>.webm" type="video/webm">
-Your browser does not support the video tag.
-</video>
+<audio id="audio" src="<?=$audio_file?>" type="audio/wav" controls="controls" autoplay></audio>
 </body>
 </html>
 
