@@ -23,11 +23,13 @@ Contrary, for recording both screen and audio, please use index.html.
 
 Installation of the nodeJS app
 
-To record audio at all, you will have to change to the node_modules\record-audio directory and call npm install, then call node index.js and make sure the nodeJS has started. Since the application makes use
-of lame, npm install will compile the libraries. If you install this in a cloud, this should happen automatically. If you haven't installed the right compilers, you will have to do this first.
+To record audio at all, you will have to change to the node_modules\record-audio directory and call npm install, then call node index.js and make sure the nodeJS has started. 
+Then you can call http://localhost/{path_to_your_app}/index.html, or alternatively http://localhost:8080. The application will only work fully if "node index.js" is running.
 
-If you install the record-audio package in the cloud, you will have to adjust the variable serverURL in index.html, which by default is http://localhost:8080. Also, if you change this, modify the IP inside config.js and
-the URL and IP inside server.js (lines 26 and 27).
+Since the application makes use of lame, npm install will compile the libraries. If you install this in a cloud, this should happen automatically. If you haven't installed the right compilers, you will have to do this first.
 
 By default, you can access all .wav files and .mp3 files by calling http://localhost:8080/uploads/{name_of_file}. If you enable S3 bucket uploading in config.js, the files will get removed from that directory and will
 be available in your bucket only.
+
+If you install the record-audio package in the cloud, you will have to adjust the variable serverURL in index.html, which by default is http://localhost:8080. Also, if you change this, modify the IP inside config.js and
+the URL and IP inside server.js (lines 26 and 27).
