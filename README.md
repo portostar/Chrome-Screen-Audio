@@ -1,6 +1,6 @@
 # Chrome Screen and Audio
 At this moment, there is no way get a single recorded file which contains both audio and screen in Chrome. The reason, it can be done in firefox is MediaRecorder API.
-So, either we have to wait, or we implement audio recording to the screen recorder. To do this, we have to install send all audio to a nodejs server in an extra step.
+So, either we have to wait, or we implement audio recording to the screen recorder. To do this, we have to send all audio to a nodejs server in an extra step.
 
 Have a look yourself at the used technology:
 
