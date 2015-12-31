@@ -18,13 +18,20 @@ Recording audio only also is possible.
 
 For developing locally, you will first have to call npm install, then load the server using node server.js. It will output the current port, which will be 8080 by default.
 
-Installation of the nodeJS app
+# Installation of the nodeJS app
 
 By default, you can access all .wav files and .mp3 files by calling http://localhost:8080/uploads/{name_of_file}. If you enable S3 bucket uploading in config.js, the files will get removed from that directory and will
 be available in your bucket only.
 
-You will have to adjust th line93 in index.html:
+You will have to adjust ine 93 in index.html:
 
    var socketio = io.connect('https://xing-nib.rhcloud.com:8443', {secure:true});
 
 and change the URL to http://localhost:8080 and remove the {secure:true}.
+
+Also, ffmpeg is set up to do the conversion on the server. Besides having to setup the port and ip, most importantly you will also have to adjust the path to ffmpeg inside server.js. If you need ffmpeg
+you can get the newest version from http://johnvansickle.com/ffmpeg/ - just wget and untar it and set up the path, and you're ready to go.
+
+# Bugs
+
+Currently, uploading of large files (more than 10 seconds) will not work. I'm working on an uploader.
