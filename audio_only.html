@@ -84,7 +84,7 @@
         }
     </style>
     
-    <script src="js/RecordRTC.js"></script>
+    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
     <script src="https://cdn.webrtc-experiment.com/gif-recorder.js"></script>
     <script src="https://cdn.webrtc-experiment.com/getScreenId.js"></script>
 
@@ -130,8 +130,8 @@
 
 
 				<audio id="audio-preview" controls style="display:none;"></audio> <!-- To hear what is getting recorded remove the muted attribute --> <!-- border: 1px solid rgb(15, 158, 238); width: 94%;height: 11em; -->
-				<!--<button id="start-recording">Start Recording</button>
-				<button id="stop-recording" disabled="">Stop Recording</button>-->
+				<button id="start-recording">Start Recording</button>
+				<button id="stop-recording">Stop Recording</button>
 		
   <h2>Log</h2>
   <pre id="log"></pre>
@@ -143,13 +143,13 @@
 		var audioPreview = document.getElementById('audio-preview');
 		var recordAudio; // RTC Instance
 
-/*startRecordingButton.onclick = function () {
+startRecordingButton.onclick = function () {
 	startRecording();
 };
 
 stopRecordingButton.onclick = function () {
     stopRecording();
-};*/
+};
 
 function xhr(url, data, callback) {
     var request = new XMLHttpRequest();
@@ -263,30 +263,9 @@ recordAudio = new RecordRTC(stream, {
             //var recordingMedia = recordingDIV.querySelector('.recording-media');
             var recordingPlayer = recordingDIV.querySelector('video');
             //var mediaContainerFormat = recordingDIV.querySelector('.media-container-format');
-            
-            recordingDIV.querySelector('button').onclick = function() {
-				
-                button = this;
-                if(button.innerHTML === 'Stop Recording') {
-                    stopRecording();
-                }
-                
-                button.disabled = true;
-                
+        
       
-              
-                
-                if (true) { // (recordingMedia.value === 'record-screen') {					
-					
-						startRecording();
-                      
-              
-                }
-
-     
-            });
-            
-
+        
         
         </script>
 

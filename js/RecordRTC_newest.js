@@ -1,3 +1,4 @@
+
 // Last time updated at Thursday, October 22nd, 2015, 8:20:55 PM 
 
 // links:
@@ -120,7 +121,7 @@ function RecordRTC(mediaStream, config) {
                 handleRecordingDuration();
             }
         });
-	console.log("STARTED");
+
         return self;
     }
 
@@ -136,12 +137,10 @@ function RecordRTC(mediaStream, config) {
             };
         }
 
-console.log("Recorder!");
         var Recorder = new GetRecorderType(mediaStream, config);
 
         mediaRecorder = new Recorder(mediaStream, config);
         mediaRecorder.record();
-		console.log("mediaRecorder.record() called");
     }
 
     function stopRecording(callback) {
@@ -181,8 +180,6 @@ console.log("Recorder!");
             }
 
             if (blob && !config.disableLogs) {
-				var url = URL.createObjectURL(blob);
-				console.log(url);
                 console.debug(blob.type, '->', bytesToSize(blob.size));
             }
 
@@ -1192,15 +1189,15 @@ if (typeof URL === 'undefined' && typeof webkitURL !== 'undefined') {
 }
 
 /*global navigator:true */
-var mynavigator = window.navigator;
+var navigator = window.navigator;
 
-if (typeof mynavigator !== 'undefined') {
-    if (typeof mynavigator.webkitGetUserMedia !== 'undefined') {
-        navigator.getUserMedia = mynavigator.webkitGetUserMedia;
+if (typeof navigator !== 'undefined') {
+    if (typeof navigator.webkitGetUserMedia !== 'undefined') {
+        navigator.getUserMedia = navigator.webkitGetUserMedia;
     }
 
-    if (typeof mynavigator.mozGetUserMedia !== 'undefined') {
-        navigator.getUserMedia = mynavigator.mozGetUserMedia;
+    if (typeof navigator.mozGetUserMedia !== 'undefined') {
+        navigator.getUserMedia = navigator.mozGetUserMedia;
     }
 } else {
     navigator = {
@@ -1392,7 +1389,7 @@ function MediaStreamRecorder(mediaStream, config) {
             var mediaStreamSource = context.createMediaStreamSource(mediaStream);
 
             var destination = context.createMediaStreamDestination();
-            mediaStreamSource.connect(destination);alert(navigator);
+            mediaStreamSource.connect(destination);
 
             mediaStream = destination.stream;
         }
