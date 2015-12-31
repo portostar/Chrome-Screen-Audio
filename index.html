@@ -16,7 +16,6 @@
     <link rel="author" type="text/html" href="https://plus.google.com/+MuazKhan">
     <meta name="author" content="Muaz Khan">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-	<script src="/socket.io/socket.io.js"> </script>
 	<script>
 	var uploadedAudio = false;
 	var uploadedVideo = false;
@@ -89,14 +88,10 @@
     <!-- for Edige/FF/Chrome/Opera/etc. getUserMedia support -->
     <script src="https://cdn.rawgit.com/webrtc/adapter/master/adapter.js"></script>
 	<script>
-	              
-            var socketio = io.connect('https://xing-nib.rhcloud.com:8443', {secure:true});
+	         
             
             var mediaStream = null;
             
-            socketio.on('connect', function() {
-                startRecording.disabled = false;
-            });
 
 	</script>
 </head>
@@ -131,6 +126,11 @@
                 </select>-->
                 
                 <button>Start Recording</button>
+				<div>
+<div id="notes"></div>
+<div id="t"></div>
+<div id="speed"></div>
+</div>
             </h2>
             
             <video controls muted></video>
@@ -203,30 +203,101 @@ recordAudio.stopRecording(function() {
 							__log("getData1");
                             // get video data-URL
                             recordVideo.getDataURL(function(videoDataURL) {
-								__log("getData2");
-								__log("recordVideo.getBlob():"+recordVideo.getBlob());
-								__log("recordAudio.getBlob():"+recordAudio.getBlob());
-								__log("Creating files");
-                                var files = {
-                                    audio: {
-                                        type: recordAudio.getBlob().type || 'audio/wav',
-                                        dataURL: audioDataURL
-                                    },
-                                    video: {
-                                        type: recordVideo.getBlob().type || 'video/webm',
-                                        dataURL: videoDataURL
-                                    }
-                                };
-								__log("socketIO");
-                                socketio.emit('message', files);
+							
+							uploadFile(recordAudio.getBlob(), function(url) {
+								audioURL=url;
+								console.log("audio URL:"+audioURL);
+							});
+							uploadFile(recordVideo.getBlob(), function(url) {
+								videoURL=url;
+								console.log("video URL:"+videoURL);
+							});
+							
+							var xhr = new XMLHttpRequest();
+							xhr.open("GET",  location.protocol + "//" + location.hostname + ":" + 8080+"?action=process&audio="+baseName(audioURL)+"&video="+baseName(videoURL), false);
+							xhr.onload = function(e) { 
+								setTimeout(function() { doesExist(); }, 3000);
+							};
+							xhr.send();
 							});
 
 			});
 					});
 });
 }
+
+function doesExist() {
+										checkxhr = new XMLHttpRequest();
+										checkxhr.open("GET",  location.protocol + "//" + location.hostname + ":" + 8080+"?action=doesexist&filename="+baseName(videoURL)+".done", false);
+										checkxhr.onload = function(e) {
+												console.log("RESPONSE:"+checkxhr.response);
+											    if (checkxhr.response=="EXISTS")
+											    {
+													alert("EXISTS");
+											    } else {
+													setTimeout(function() { doesExist(); }, 3000);
+												}
+										}
+										checkxhr.send();
+}							
     
 // AUDIO RECORDING END
+
+// BREWTUS START
+
+var CREATE_ENDPT = location.protocol + "//" + location.hostname + ":" + 8080 + "/files";
+
+function uploadChunk(blobOrFile, submit_url, start, end, total) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("PATCH", submit_url, false);
+    xhr.setRequestHeader('Offset', start);
+    xhr.setRequestHeader('Content-Type', 'application/offset+octet-stream');
+    xhr.onload = function(e) { 
+        console.log('uploaded bytes: ' + (end  - start) + "/" + total); 
+    };
+    xhr.send(blobOrFile);
+}
+
+
+function uploadFile(blob, callback) {
+    var BYTES_PER_CHUNK = 10 * 1024 * 1024; // 10MB chunk sizes.
+    var SIZE = blob.size;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", CREATE_ENDPT, false);
+    xhr.setRequestHeader('Final-Length', SIZE);
+    xhr.send()
+    submit_url = xhr.getResponseHeader("Location");
+    callback(submit_url);
+
+        
+    blob.slice = blob.slice || blob.mozSlice || blob.webkitSlice;
+
+    var start  = 0;
+    var end  = 0;
+    var startTime = new Date().getTime()/1000;
+    var speed = 0;
+    var notes = '';
+    while(start < SIZE) {
+        end = start + BYTES_PER_CHUNK;
+        if (end  >  SIZE) {
+            end = SIZE;
+        }
+        var chunk = blob.slice(start, end);
+        uploadChunk(chunk, submit_url, start, end, SIZE);
+        notes += '<br>uploaded ' + start  + "-" + (end - 1) + "/" + SIZE + "  chunk size:" + chunk.size;
+        document.getElementById('notes').innerHTML = notes;
+        console.log(notes);
+        start += chunk.size;
+    }
+    var elapsedTime = new Date().getTime()/1000 - startTime;
+    console.log("elapsed Time " + elapsedTime);
+    speed = (SIZE * 8.0) / elapsedTime;
+    console.log("speed " + speed);
+
+    document.getElementById('speed').innerHTML = speed > 1024 * 1024 ? (speed/(1024 * 1024) + " Mbps") :( speed/1024 + "Kbps");
+    document.getElementById('t').innerHTML = elapsedTime > 60 ? (elapsedTime/(60) + " mins"): (elapsedTime + " secs");
+}
 </script>
 
         <script>
@@ -280,32 +351,7 @@ recordAudio.stopRecording(function() {
                     }
 					__log("Calling button.recordingEndedCallback");
                     button.recordingEndedCallback();
-                    /*if(button.recordRTC) {
-                        if(button.recordRTC.length) {
-                            button.recordRTC[0].stopRecording(function(url) {
-                                if(!button.recordRTC[1]) {
-                                    
-                                    stopStream();
-
-                                    //saveToDiskOrOpenNewTab(button.recordRTC[0]);
-                                    return;
-                                }
-
-                                button.recordRTC[1].stopRecording(function(url) {
-                                    button.recordingEndedCallback(url);
-                                    stopStream();
-                                });
-                            });
-                        }
-                        else {
-                            button.recordRTC.stopRecording(function(url) {
-                                button.recordingEndedCallback(url);
-                                stopStream();
-
-                                //saveToDiskOrOpenNewTab(button.recordRTC);
-                            });
-                        }
-                    }*/
+                   
                     
                     return;
                 }
@@ -427,35 +473,19 @@ recordAudio.stopRecording(function() {
                 navigator.mediaDevices.getUserMedia(mediaConstraints).then(successCallback).catch(errorCallback);
             }
 
-             socketio.on('merged', function(fileName) {
-                var href = (location.href.split('/').pop().length 
-                        ? location.href.replace( location.href.split('/').pop(), '' ) 
-                        : location.href
-                    );
-                    
-                href = href + '/uploads/' + fileName;
-                    
-                console.log('got file ' + href);
-                
-                cameraPreview.src = href
+                /*cameraPreview.src = href
                 cameraPreview.play();
                 cameraPreview.muted = false;
-                cameraPreview.controls = true;
-            });
+                cameraPreview.controls = true;*/
+        
             
-            socketio.on('ffmpeg-output', function(result) {
-                /*if(parseInt(result) >= 100) {
-                    progressBar.parentNode.style.display = 'none';
-                    return;
-                }
-                progressBar.parentNode.style.display = 'block';
-                progressBar.value = result;
-                percentage.innerHTML = 'Ffmpeg Progress ' + result + "%";*/
-            });
-            
-            socketio.on('ffmpeg-error', function(error) {
-                alert(error);
-            });
+      function baseName(str)
+{
+   var base = new String(str).substring(str.lastIndexOf('/') + 1); 
+    if(base.lastIndexOf(".") != -1)       
+        base = base.substring(0, base.lastIndexOf("."));
+   return base;
+}
         </script>
 
     <footer>
