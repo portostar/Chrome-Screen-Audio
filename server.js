@@ -41,12 +41,13 @@ var serve = serveStatic("./public/");
   };
 
   playPage = function(res) {
-    return fs.readFile(path.join(__dirname, "/play.html"), "utf8", function(err, data) {
+    return fs.readFile(path.join(__dirname, "/play_video.html"), "utf8", function(err, data) {
+		console.log("DATA.LENGTH:"+data.length);
       res.setHeader("Content-Type", "text/html");
       if (!err) {
-		  var parsed = url.parse(req.url, true);
+		 /* var parsed = url.parse(req.url, true);
 		  var query = parsed.query;
-		  data = data.replace("{id}", query.id);
+		  data = data.replace("{id}", "");*/
         return httpStatus(res, 200, "Ok", data);
       }
       winston.error(util.inspect(err));
@@ -270,6 +271,10 @@ var serve = serveStatic("./public/");
 				}
 			}
       return testUploadPage(res);
+    } else if (urlPath=== "/play")
+    {
+		console.log("LOADING /PLAY");
+		return playPage(res);
     }
     if (!(urlPath.length > 1)) {
       return httpStatus(res, 405, "Not Allowed");
