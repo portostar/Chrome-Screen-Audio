@@ -3,13 +3,18 @@
     "author": "Oliver Bachmann <oliverbach@gmail.com>",
     "description": "WebRTC screen recording with audio and TUS Server Implementation",
     "version": "0.0.1",
-    "main": "server",
+    "scripts": {
+     "start": "supervisor server.js"
+      },
+     "main": "server.js",
     "dependencies": {
         "coffee-script": "latest",
         "node-uuid": "latest",
         "winston": "latest",
 	"fluent-ffmpeg": "^1.7.2",
-	"knox" : "*"
+	"knox" : "*",
+	"finalhandler" : "*",
+	"serve-static" : "*"
      },
     "keywords": [
         "upload",
