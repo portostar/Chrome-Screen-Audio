@@ -9,6 +9,13 @@ exports.merge = function(audioFileName, videoFileName) {
     var audioFile = path.join(__dirname, 'files', audioFileName),
         videoFile = path.join(__dirname, 'files', videoFileName),
         mergedFile = path.join(__dirname, 'files', videoFileName + '-merged.webm');
+
+    fs.rename(audioFile, audioFile+".mp3");
+	fs.rename(videoFile, videoFile+".webm");
+	audioFile=audioFile+".mp3";
+	videoFile=videoFile+".webm";
+
+
 	var ffmpeg = 
     new FFmpeg({
             source: videoFile
@@ -66,9 +73,9 @@ console.log("PUT "+path.basename(mergedFile));
 									'Content-Type': 'application/json'
 								  });*/
 								
-								 fs.unlinkSync(mergedFile);
+								 /*fs.unlinkSync(mergedFile);
 								 fs.unlinkSync(audioFile);
-								 fs.unlinkSync(videoFile);
+								 fs.unlinkSync(videoFile);*/
 
 							      var destFileName = path.join(__dirname, 'files', videoFileName + '.done');
 								  console.log("Writing "+destFileName);

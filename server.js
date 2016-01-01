@@ -288,6 +288,7 @@ var serve = serveStatic("./public/");
         return pattern[req.method](req, res, query, matches);
       }
     }
+	console.log("serve");
     return serve(req, res, function() { });
   };
 

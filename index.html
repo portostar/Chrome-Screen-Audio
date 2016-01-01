@@ -17,7 +17,7 @@
     <meta name="author" content="Muaz Khan">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<script>
-	var port = ""; // Maybe you need to add ":8080" here, so ajax requests call to 8080 if you're on 8080
+	var port = ":8080"; // Maybe you need to add ":8080" here, so ajax requests call to 8080 if you're on 8080
 	</script>
     <link rel="stylesheet" href="https://cdn.webrtc-experiment.com/style.css">
     <style>
@@ -83,6 +83,7 @@
     <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
     <script src="https://cdn.webrtc-experiment.com/gif-recorder.js"></script>
     <script src="https://cdn.webrtc-experiment.com/getScreenId.js"></script>
+	<script src='js/lame.all.js'></script>
 
     <!-- for Edige/FF/Chrome/Opera/etc. getUserMedia support -->
     <script src="https://cdn.rawgit.com/webrtc/adapter/master/adapter.js"></script>
@@ -178,7 +179,8 @@ stopRecordingButton.onclick = function () {
         recordAudio = new RecordRTC(stream, {
 			 type: 'audio',
             bufferSize: 16384, // 256, 512, 1024, 2048, 4096, 8192, 16384 only
-			sampleRate: 44100
+			sampleRate: 44100,
+			numberOfAudioChannels : 1
         });
 
         recordAudio.startRecording();
@@ -202,22 +204,83 @@ recordAudio.stopRecording(function() {
 							__log("getData1");
                             // get video data-URL
                             recordVideo.getDataURL(function(videoDataURL) {
+		
+var reader  = new FileReader();
+
+  reader.onloadend = function (evt) {
+    
+		var arrayBuf = evt.target.result;
+		var samples = new Int16Array(arrayBuf, 0, Math.floor(arrayBuf.byteLength / 2));
+
+var mp3Blob;
+								
+									__log("Converting to Mp3");
+								lib = new lamejs();
+channels = 1; //1 for mono or 2 for stereo
+sampleRate = 44100; //44.1khz (normal mp3 samplerate)
+kbps = 128; //encode 128kbps mp3
+mp3encoder = new lib.Mp3Encoder(channels, sampleRate, kbps);
+var mp3Data = [];
+
+//samples = new Int16Array(44100); //one second of silence (get your data from the source you have)
+console.log(recordAudio.getBlob());
+sampleBlockSize = 1152; //can be anything but make it a multiple of 576 to make encoders life easier
+
+var mp3Data = [];
+for (var i = 0; i < samples.length; i += sampleBlockSize) {
+  sampleChunk = samples.subarray(i, i + sampleBlockSize);
+  var mp3buf = mp3encoder.encodeBuffer(sampleChunk);
+  if (mp3buf.length > 0) {
+      mp3Data.push(mp3buf);
+  }
+}
+var mp3buf = mp3encoder.flush();   //finish writing mp3
+
+if (mp3buf.length > 0) {
+    mp3Data.push(new Int16Array(mp3buf));
+}
+
+var mp3Blob = new Blob(mp3Data, {type: 'audio/mp3'});
+//var url = window.URL.createObjectURL(blob);
+
+
+
+
+											uploadFile(mp3Blob, function(url) {
+																						audioURL=url;
+																						console.log("audio URL:"+audioURL);
+																							uploadFile(recordVideo.getBlob(), function(url) {
+																							videoURL=url;
+																							console.log("video URL:"+videoURL);
+
+																						setTimeout(function() {
+																						var xhr = new XMLHttpRequest();
+																						xhr.open("GET",  location.protocol + "//" + location.hostname + port +"?action=process&audio="+baseName(audioURL)+"&video="+baseName(videoURL), false);
+																						xhr.onload = function(e) { 
+																							setTimeout(function() { doesExist(); }, 3000);
+																						};
+																						xhr.send();
+																						}, 2000);
+
+																						});
+
+											});
+											
+											
+									
+
+
+  }
+
+    reader.readAsArrayBuffer(recordAudio.getBlob());
+
+
+		
 							
-							uploadFile(recordAudio.getBlob(), function(url) {
-								audioURL=url;
-								console.log("audio URL:"+audioURL);
-							});
-							uploadFile(recordVideo.getBlob(), function(url) {
-								videoURL=url;
-								console.log("video URL:"+videoURL);
-							});
-							
-							var xhr = new XMLHttpRequest();
-							xhr.open("GET",  location.protocol + "//" + location.hostname + port +"?action=process&audio="+baseName(audioURL)+"&video="+baseName(videoURL), false);
-							xhr.onload = function(e) { 
-								setTimeout(function() { doesExist(); }, 3000);
-							};
-							xhr.send();
+									
+		/** Convert to mp3 end **/
+
+						
 							});
 
 			});
@@ -266,7 +329,7 @@ function uploadFile(blob, callback) {
     xhr.open("POST", CREATE_ENDPT, false);
     xhr.setRequestHeader('Final-Length', SIZE);
     xhr.send()
-    submit_url = xhr.getResponseHeader("Location");
+    var submit_url = xhr.getResponseHeader("Location");
     callback(submit_url);
 
         
@@ -402,8 +465,8 @@ function uploadFile(blob, callback) {
                             type: 'video', // mediaContainerFormat.value === 'Gif' ? 'gif' : 'video',
                             disableLogs: false,
                             canvas: {
-                                width: Math.floor(screen.width/2),
-                                height: Math.floor(screen.height/2)
+                                width: Math.floor(screen.width*.7),
+                                height: Math.floor(screen.height*.7)
                             }
                         });
                         
@@ -483,6 +546,9 @@ function uploadFile(blob, callback) {
         base = base.substring(0, base.lastIndexOf("."));
    return base;
 }
+
+
+
         </script>
 
     <footer>
