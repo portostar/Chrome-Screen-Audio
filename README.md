@@ -1,37 +1,66 @@
 # Chrome Screen and Audio
-At this moment, there is no way get a single recorded file which contains both audio and screen in Chrome. The reason, it can be done in firefox is MediaRecorder API.
-So, either we have to wait, or we implement audio recording to the screen recorder. To do this, we have to send all audio to a nodejs server in an extra step.
+At this moment, there is no way get a single recorded file which contains both audio and screen in Chrome. The reason that it can be done in Firefox is that it already has a MediaRecorder API.
+For functionality for other cases, have a look at the WebRTC examples. This example is specifically for Chrome and Screen recording with audio recording.
 
-Have a look yourself at the used technology:
+# Demo
 
-This is a fork of https://github.com/muaz-khan/RecordRTC/tree/master/RecordRTC-to-PHP for screen recording and https://github.com/muaz-khan/RecordRTC/tree/master/RecordRTC-over-Socketio for sending both audio and video to a nodejs server. 
-As soon as the recording stops, the video file (.webm) and the audio file (.wav) gets uploaded using socket.io. After notification, the nodeJS server converts the .webm and the .wav to a single file using ffmpeg. 
-It's also possible to have the .mp3 file automatically stored on a Amazon S3 Bucket by setting it up in config.js.
+https://example-screencaster.rhcloud.com
+
+# Used technology:
+
+This is a fork of https://github.com/muaz-khan/RecordRTC/tree/master/RecordRTC-to-PHP for screen recording, https://github.com/muaz-khan/RecordRTC/tree/master/RecordRTC-over-Socketio for wav recording,
+https://github.com/zhuker/lamejs for convert WAV to MP3 in the browser, and https://github.com/vayam/brewtus for uploading. 
+As soon as the recording stops, the video file (.webm) and the audio file (.mp3) gets uploaded using tus.io. After notification, the nodeJS server converts the .webm and the .mp3 to a single file using ffmpeg. 
+
+# What you need
+- Amazon Bucket: The .mp3 file gets automatically stored on a Amazon S3 Bucket by setting it up in config.js. You must set up the keys in ffmpeg_merge.js.
+- if you decide to remove the code of the Amazon Bucket, you must make make sure to set the correct URL in line 189 of index.html
+- Openshift (http://www.openshift.com) account or another hosting environment for NodeJS
+- ffmpeg locally installed, and the correct paths set up in ffmpeg_merge.js in line 27. For more details see the headline "ffmpeg".
+
+# running locally
+
+To run it locally, set the port to ":8080" in line 20, do a npm install and call node server.js. Then in your browser call http://localhost:8080.
+
+# index.html
+
+When you start the application locally, you will have to set the variable "port" in line 20. Also, when you make use of an Amazon Bucket, set the URL in line 189 of index.html. You can also
+set it to 'http://localhost:8080/files/'+filename+'-merged.webm' if you remove uploading to the bucket and remove the unlinkSync calls in ffmpeg_merge.js. Then all files will get uploaded to the /files directory.
+
+# ffmpeg_merge.js
+
+Do not forget to set the Amazon S3 keys in line 162 of ffmpeg_merge.js.
+
+If you do not make use of Amazon Buckets.
+1. remove the calls to fs.unlinkSync in ffmpeg_merge.js.
+2. remove the code for uploading and the files in ffmpeg_merge.js, and set the URL in line 189 of index.html to the filenames in /files. 
+
+# Online requirements
 
 Please note: For screen recording to work properly in Chrome, every user will first have to download and activate this extension: 
 https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk
 
-This is only for screen and audio recording at the same time. If you need further support, you should check out the demos on https://github.com/muaz-khan/RecordRTC. 
+This is only for screen and audio recording at the same time.
 
 If you're looking for further solutions to provide more recording options, i.e. "Video and Audio" or "Screen only without audio", you will have to make use of the other WebRTC examples. This is, like said, for Screen and Audio.
-Recording audio only also is possible. 
-
-For developing locally, you will first have to call npm install, then load the server using node server.js. It will output the current port, which will be 8080 by default.
 
 # Installation of the nodeJS app
 
-By default, you can access all .wav files and .mp3 files by calling http://localhost:8080/uploads/{name_of_file}. If you enable S3 bucket uploading in config.js, the files will get removed from that directory and will
+By default, you can access all .wav files and .mp3 files by calling http://localhost:8080/files/{name_of_file}. By default S3 bucket uploading is enabled, please set up the keys. After upload, the files will get removed from /files and will
 be available in your bucket only.
 
-You will have to adjust ine 93 in index.html:
+#ffmpeg
 
-   var socketio = io.connect('https://xing-nib.rhcloud.com:8443', {secure:true});
+ffmpeg is set up to do the conversion on the server. It is needed to merge the audio and the video. You must make sure that the correct path is set in ffmpeg_merge.js. If you develop on a Windows machine,
+there already is a default path setup which could work on a Windows machine.
 
-and change the URL to http://localhost:8080 and remove the {secure:true}.
+You can get the newest version from http://johnvansickle.com/ffmpeg/ - get the precompiled library, most likely the 32 bit version. On the server, use wget {url}, and call
 
-Also, ffmpeg is set up to do the conversion on the server. Besides having to setup the port and ip, most importantly you will also have to adjust the path to ffmpeg inside server.js. If you need ffmpeg
-you can get the newest version from http://johnvansickle.com/ffmpeg/ - just wget and untar it and set up the path, and you're ready to go.
+tar -xvf ffmpeg*.*
+mv ffmpeg{version} ffmpeg
+
+If you deploy to openshift, the environment variable process.env.OPENSHIFT_DATA_DIR is already setup. Otherwise, you must make sure that the correct path to ffmpeg is set.
 
 # Bugs
 
-Currently, uploading of large files (more than 10 seconds) will not work. I'm working on an uploader.
+The resulting .webm file can only get opened by Chrome and Firefox, not by a media player. More configuration options would be needed to create a proper .webm or .mp4 file.
