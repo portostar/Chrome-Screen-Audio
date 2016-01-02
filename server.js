@@ -40,16 +40,17 @@ var serve = serveStatic("./public/");
     });
   };
 
-  playPage = function(res) {
+  playPage = function(res, filename) {
     return fs.readFile(path.join(__dirname, "/play_video.html"), "utf8", function(err, data) {
+		 console.log("FILENAME:"+filename);
 		console.log("DATA.LENGTH:"+data.length);
-      res.setHeader("Content-Type", "text/html");
+		 res.setHeader("Content-Type", "text/html");
       if (!err) {
-		 /* var parsed = url.parse(req.url, true);
-		  var query = parsed.query;
-		  data = data.replace("{id}", "");*/
+		 
+		  data = data.replace("{filename}", filename);
         return httpStatus(res, 200, "Ok", data);
       }
+	  log("Not allowed");
       winston.error(util.inspect(err));
       return httpStatus(res, 405, "Not Allowed");
     });
@@ -241,17 +242,15 @@ var serve = serveStatic("./public/");
 	  console.log("query.action:"+query.action);
 			if (query.action=="doesexist")
 			{
-				try {
-					// Query the entry
-					stats = fs.lstatSync("files/"+query.filename);
-					console.log("EXISTS");
-					return httpStatus(res, 200, "Ok", "EXISTS");
-				}
-				catch (e) {
-					console.log("DOES NOT EXIST");
-					return httpStatus(res, 200, "Ok", "NOT_EXISTS");
-				}
-				
+				fs.readFile("files/"+query.filename, 'utf8', function (err,data) {
+					if (err)
+					{
+						return httpStatus(res, 200, "Ok", "0%");
+					} else {
+						return httpStatus(res, 200, "Ok", data);
+					}
+				});
+				return;
 			} else
 			if (query.action=="process")
 			{
@@ -267,14 +266,14 @@ var serve = serveStatic("./public/");
 						
 						console.log("starting merge");
 						ffmpeg_merge.merge(query.audio, query.video);
-						console.log("DONE");
+				
 				}
 			}
       return testUploadPage(res);
     } else if (urlPath=== "/play")
     {
 		console.log("LOADING /PLAY");
-		return playPage(res);
+		return playPage(res, query.url);
     }
     if (!(urlPath.length > 1)) {
       return httpStatus(res, 405, "Not Allowed");

@@ -4,6 +4,7 @@ exports.merge = function(audioFileName, videoFileName) {
 	var knox = require('knox');
 	var path = require("path");
 	var fs = require("fs");
+	var util = require("util");
 	
 	console.log("path:"+path);
     var audioFile = path.join(__dirname, 'files', audioFileName),
@@ -15,23 +16,33 @@ exports.merge = function(audioFileName, videoFileName) {
 	audioFile=audioFile+".mp3";
 	videoFile=videoFile+".webm";
 
+	var destFileName = path.join(__dirname, 'files', videoFileName + '.done');
+		
 
 	var ffmpeg = 
     new FFmpeg({
             source: videoFile
         });
 			
-			//ffmpeg.setFfmpegPath("/var/lib/openshift/568140c27628e166960000cc/app-root/data/ffmpeg/ffmpeg"); // Path to directory, on Windows with .exe, on Linux without ffmpeg
-			ffmpeg.setFfmpegPath("C:\\ffmpeg\\bin\\ffmpeg.exe"); // Path to directory, on Windows with .exe, on Linux without ffmpeg
+			ffmpeg.setFfmpegPath("/var/lib/openshift/568140c27628e166960000cc/app-root/data/ffmpeg/ffmpeg"); // Path to directory, on Windows with .exe, on Linux without ffmpeg
+			//ffmpeg.setFfmpegPath("C:\\ffmpeg\\bin\\ffmpeg.exe"); // Path to directory, on Windows with .exe, on Linux without ffmpeg
 			
         ffmpeg.addInput(audioFile)
         .on('error', function (err,firstout,secondout) {
-			
+			fs.writeFile(destFileName, "ERROR"+err+firstout+secondout);
 			console.log(err+firstout+secondout);
         })
         .on('progress', function (progress) {
-           
-			console.log(Math.round(progress.percent));
+          						  console.log("Writing "+Math.round(progress.percent)+" to "+destFileName);
+
+								 
+									 //fs.writeFile(destFileName, Math.round(progress.percent)+"%"
+									   fs.writeFile(destFileName, progress.timemark
+										 , function(err) {
+									if(err) {
+										console.log(err);
+									  }
+								  });
         })
         .on('end', function () {
 		
@@ -50,7 +61,7 @@ exports.merge = function(audioFileName, videoFileName) {
 								var client = knox.createClient({
     key: ''
   , secret: ''
-  , bucket: ''
+  , bucket: '
 });
 console.log("PUT "+path.basename(mergedFile));
 							console.log("CLIENT:"+client);
@@ -73,11 +84,10 @@ console.log("PUT "+path.basename(mergedFile));
 									'Content-Type': 'application/json'
 								  });*/
 								
-								 /*fs.unlinkSync(mergedFile);
+								 fs.unlinkSync(mergedFile);
 								 fs.unlinkSync(audioFile);
-								 fs.unlinkSync(videoFile);*/
+								 fs.unlinkSync(videoFile);
 
-							      var destFileName = path.join(__dirname, 'files', videoFileName + '.done');
 								  console.log("Writing "+destFileName);
 								  fs.writeFile(destFileName, "DONE", function(err) {
 									if(err) {

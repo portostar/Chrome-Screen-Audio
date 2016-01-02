@@ -17,10 +17,27 @@
     <meta name="author" content="Muaz Khan">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 	<script>
-	var port = ":8080"; // Maybe you need to add ":8080" here, so ajax requests call to 8080 if you're on 8080
+	var port = ""; // Maybe you need to add ":8080" here, so ajax requests call to 8080 if you're on 8080
 	</script>
     <link rel="stylesheet" href="https://cdn.webrtc-experiment.com/style.css">
     <style>
+	.PopupPanel
+{
+    display:none;
+    border: solid 1px black;
+	overflow:auto;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    background-color: white;
+    z-index: 100;
+    height: 400px;
+    margin-top: -200px;
+
+    width: 600px;
+    margin-left: -300px;
+}
+
     audio {
         vertical-align: bottom;
         width: 10em;
@@ -34,7 +51,6 @@
         border-radius: 1px;
         font-size: 2em;
         margin: .2em;
-        width: 30%;
     }
     p,
     .inner {
@@ -89,7 +105,7 @@
     <script src="https://cdn.rawgit.com/webrtc/adapter/master/adapter.js"></script>
 	<script>
 	         
-            
+			var counter = 10;            
             var mediaStream = null;
             
 
@@ -97,7 +113,7 @@
 </head>
 
 <body>
-    <article>
+ <section id="mybody">
         <header style="text-align: center;">
             <h1>
                 <a href="https://github.com/portostar/Chrome-Screen-and-Audio">Chrome Screen and Audio</a>
@@ -141,9 +157,13 @@
 				<!--<button id="start-recording">Start Recording</button>
 				<button id="stop-recording" disabled="">Stop Recording</button>-->
 		
-  <h2>Log</h2>
-  <pre id="log"></pre>
-
+   </section>
+   <section>
+	<section id="log" class="PopupPanel">
+	</section style="display:block">
+	<table><tr><td>Quality</td><td><input type="radio" value="0.7" name="quality" checked> Normal quality <input type="radio" value="0.4" name="quality"> Low quality</td></tr>
+	<tr><td>Countdown</td><td><input type="radio" value="1" name="countdown"> Yes <input type="radio" value="0" name="countdown" checked> No<br /></td></tr></table>
+	</section>
   <script>
 	// AUDIO RECORDING START
 		var startRecordingButton = document.getElementById('start-recording');
@@ -160,8 +180,15 @@ stopRecordingButton.onclick = function () {
 };*/
 
 	 function __log(e, data) {
-    log.innerHTML += "\n" + e + " " + (data || '');
+    log.innerHTML += "\n" + e + " " + (data || '')+"<br />";
+	log.scrollTop = log.scrollHeight;
   }
+
+ function getURL(filename) {
+
+	 return "http://salesdb.s3.amazonaws.com/"+filename+"-merged.webm"
+
+ }
 
   var audio_context;
   var recorder;
@@ -175,7 +202,6 @@ stopRecordingButton.onclick = function () {
         audioPreview.src = window.URL.createObjectURL(stream);
         audioPreview.play();
 
-		__log("recordAudio = new RecordRTC");
         recordAudio = new RecordRTC(stream, {
 			 type: 'audio',
             bufferSize: 16384, // 256, 512, 1024, 2048, 4096, 8192, 16384 only
@@ -189,22 +215,22 @@ stopRecordingButton.onclick = function () {
   }
 
   function stopAllRecordings() {
-	__log("stopAllRecordings called");
+	  showSpinner();
 	if (globalFilename==0)
 	{	
 	globalFilename = Math.floor(Math.random()*99999999);
 	}   
 
 var recordVideo = button.recordRTC;
-__log("stopRecording");
+__log("Please wait..");
 recordAudio.stopRecording(function() {
                     // stop video recorder
                     recordVideo.stopRecording(function() {
+						__log("Recording stopped");
 						recordAudio.getDataURL(function(audioDataURL) {
-							__log("getData1");
-                            // get video data-URL
+					        // get video data-URL
                             recordVideo.getDataURL(function(videoDataURL) {
-		
+__log("Reading audio");
 var reader  = new FileReader();
 
   reader.onloadend = function (evt) {
@@ -214,7 +240,8 @@ var reader  = new FileReader();
 
 var mp3Blob;
 								
-									__log("Converting to Mp3");
+								
+									__log("Converting Mp3");
 								lib = new lamejs();
 channels = 1; //1 for mono or 2 for stereo
 sampleRate = 44100; //44.1khz (normal mp3 samplerate)
@@ -245,7 +272,8 @@ var mp3Blob = new Blob(mp3Data, {type: 'audio/mp3'});
 
 
 
-
+  __log("Uploading...");
+	setTimeout(function() {
 											uploadFile(mp3Blob, function(url) {
 																						audioURL=url;
 																						console.log("audio URL:"+audioURL);
@@ -253,6 +281,7 @@ var mp3Blob = new Blob(mp3Data, {type: 'audio/mp3'});
 																							videoURL=url;
 																							console.log("video URL:"+videoURL);
 
+																						__log("Merging...");
 																						setTimeout(function() {
 																						var xhr = new XMLHttpRequest();
 																						xhr.open("GET",  location.protocol + "//" + location.hostname + port +"?action=process&audio="+baseName(audioURL)+"&video="+baseName(videoURL), false);
@@ -262,9 +291,10 @@ var mp3Blob = new Blob(mp3Data, {type: 'audio/mp3'});
 																						xhr.send();
 																						}, 2000);
 
-																						});
+																						}, "video");
 
-											});
+											}, "audio");
+	}, 1000);
 											
 											
 									
@@ -272,11 +302,17 @@ var mp3Blob = new Blob(mp3Data, {type: 'audio/mp3'});
 
   }
 
+  reader.onprogress = function(e) { 
+    if (e.lengthComputable) {
+      var percentage = Math.round((e.loaded * 100) / e.total);
+      __log('Loaded : '+percentage+'%');
+    }                                           
+
+  };
+
+
+
     reader.readAsArrayBuffer(recordAudio.getBlob());
-
-
-		
-							
 									
 		/** Convert to mp3 end **/
 
@@ -293,13 +329,15 @@ function doesExist() {
 										checkxhr.open("GET",  location.protocol + "//" + location.hostname + port + "?action=doesexist&filename="+baseName(videoURL)+".done", false);
 										checkxhr.onload = function(e) {
 												console.log("RESPONSE:"+checkxhr.response);
-											    if (checkxhr.response=="EXISTS")
+											    if (checkxhr.response=="DONE")
 											    {
-													alert("EXISTS");
+													window.location.href="/play?url="+getURL(baseName(videoURL));
 											    } else {
+													if (checkxhr.response!="") __log(checkxhr.response);
 													setTimeout(function() { doesExist(); }, 3000);
 												}
 										}
+										
 										checkxhr.send();
 }							
     
@@ -321,8 +359,8 @@ function uploadChunk(blobOrFile, submit_url, start, end, total) {
 }
 
 
-function uploadFile(blob, callback) {
-    var BYTES_PER_CHUNK = 10 * 1024 * 1024; // 10MB chunk sizes.
+function uploadFile(blob, callback, type) {
+    var BYTES_PER_CHUNK = 1024 * 1024; // 1MB chunk sizes.
     var SIZE = blob.size;
 
     var xhr = new XMLHttpRequest();
@@ -331,7 +369,6 @@ function uploadFile(blob, callback) {
     xhr.send()
     var submit_url = xhr.getResponseHeader("Location");
     callback(submit_url);
-
         
     blob.slice = blob.slice || blob.mozSlice || blob.webkitSlice;
 
@@ -347,7 +384,8 @@ function uploadFile(blob, callback) {
         }
         var chunk = blob.slice(start, end);
         uploadChunk(chunk, submit_url, start, end, SIZE);
-        notes += '<br>uploaded ' + start  + "-" + (end - 1) + "/" + SIZE + "  chunk size:" + chunk.size;
+		__log('uploaded ' + type +": "+(end - 1) + "/" + SIZE);
+        //notes += '<br>uploaded ' + start  + "-" + (end - 1) + "/" + SIZE + "  chunk size:" + chunk.size;
         document.getElementById('notes').innerHTML = notes;
         console.log(notes);
         start += chunk.size;
@@ -360,10 +398,8 @@ function uploadFile(blob, callback) {
     document.getElementById('speed').innerHTML = speed > 1024 * 1024 ? (speed/(1024 * 1024) + " Mbps") :( speed/1024 + "Kbps");
     document.getElementById('t').innerHTML = elapsedTime > 60 ? (elapsedTime/(60) + " mins"): (elapsedTime + " secs");
 }
-</script>
 
-        <script>
-		var globalFilename = 0; // Will be set before uploading
+var globalFilename = 0; // Will be set before uploading
             (function() {
               /*  var params = {},
                     r = /([^&=]+)=?([^&]*)/g;
@@ -460,13 +496,46 @@ function uploadFile(blob, callback) {
                     captureScreen(commonConfig);
                     
                     button.mediaCapturedCallback = function() {
-						startRecording();
+							if (getRadioValue("countdown")==1)
+							{							
+								countDown();
+							} else {
+								document.getElementById('recording_signal').play();
+								countDownIgnite();
+							}
+                    };
+                }
+
+     
+            };
+
+
+			function countDown() {
+
+				document.getElementById('log').style.display="inline";
+				setTimeout(function() {
+					counter--;
+					__log(counter);
+					if (counter==0)
+					{
+						 document.getElementById('recording_signal').play();
+						 countDownIgnite();
+					} else {
+						countDown();
+					}
+				}, 1000);
+
+			}
+
+			function countDownIgnite() {
+					document.getElementById('log').style.display="none";
+					startRecording();
                         button.recordRTC = new RecordRTC(button.stream, {
                             type: 'video', // mediaContainerFormat.value === 'Gif' ? 'gif' : 'video',
                             disableLogs: false,
                             canvas: {
-                                width: Math.floor(screen.width*.7),
-                                height: Math.floor(screen.height*.7)
+                                width: Math.floor(screen.width*getRadioValue("quality")),
+                                height: Math.floor(screen.height*getRadioValue("quality"))
                             }
                         });
                         
@@ -487,11 +556,8 @@ function uploadFile(blob, callback) {
 						
                         };
                         button.recordRTC.startRecording();
-                    };
-                }
 
-     
-            };
+			}
             
            
             function captureScreen(config) {
@@ -539,7 +605,7 @@ function uploadFile(blob, callback) {
                 cameraPreview.controls = true;*/
         
             
-      function baseName(str)
+function baseName(str)
 {
    var base = new String(str).substring(str.lastIndexOf('/') + 1); 
     if(base.lastIndexOf(".") != -1)       
@@ -547,14 +613,30 @@ function uploadFile(blob, callback) {
    return base;
 }
 
+function showSpinner() {
 
+ document.getElementById('log').innerHTML="";
+ document.getElementById('log').style.display="inline";
+ document.getElementById('mybody').style.opacity=0.5; 
+
+}
+
+function getRadioValue(name) {
+		var radios = document.getElementsByName(name);
+		for (var i = 0, length = radios.length; i < length; i++) {
+			if (radios[i].checked) {
+				// do whatever you want with the checked radio
+				return radios[i].value;
+			}
+		}
+}
 
         </script>
-
+<audio src="A-Tone-His_Self-1266414414.mp3" id="recording_signal">
     <footer>
-        <p>
-		    <a href="https://github.com/portostar/Chrome-Screen-and-Audio">Chrome Screen and Audio</a> © <a href="https://www.github.com/asciibox" rel="author" target="_blank">Oliver Bachmann</a>
-        </p>
+        <!--<p>
+		    <a href="https://github.com/portostar/Chrome-Screen-and-Audio">Chrome Screen and Audio</a> (c) <a href="https://www.github.com/asciibox" rel="author" target="_blank">Oliver Bachmann</a>
+        </p>-->
     </footer>
 
 </body>
